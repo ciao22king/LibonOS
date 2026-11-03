@@ -22,11 +22,13 @@ impl Term {
     fn bold(&self, s: &str) -> String {
         self.wrap("1", s)
     }
-    fn violet(&self, s: &str) -> String {
-        self.wrap("38;5;141", s)
+    /// The accent: an amber-copper, matching `Tokens::accent` (0xE0A33C).
+    fn accent(&self, s: &str) -> String {
+        self.wrap("38;5;179", s)
     }
-    fn cyan(&self, s: &str) -> String {
-        self.wrap("38;5;80", s)
+    /// The secondary accent: a muted teal, matching `Tokens::accent_alt`.
+    fn accent_alt(&self, s: &str) -> String {
+        self.wrap("38;5;109", s)
     }
     fn green(&self, s: &str) -> String {
         self.wrap("38;5;114", s)
@@ -134,11 +136,11 @@ fn install(term: &Term, args: &[String]) -> Result<(), ExitCode> {
         Some(plan) => {
             println!(
                 "  {} {} {}",
-                term.violet("app"),
+                term.accent("app"),
                 plan.display_name,
                 term.dim(&plan.url)
             );
-            println!("  {} {}", term.violet("destinazione"), plan.dest.display());
+            println!("  {} {}", term.accent("destinazione"), plan.dest.display());
             if let Err(e) = crate::net::download(&plan.url, &plan.dest) {
                 eprintln!("{} {e}", term.red("errore:"));
                 return Err(ExitCode::from(1));
@@ -237,7 +239,7 @@ fn search(term: &Term, args: &[String]) -> Result<(), ExitCode> {
     for p in results {
         println!(
             "  {} {}  {}",
-            term.violet(&p.id),
+            term.accent(&p.id),
             term.dim(&format!("({})", version::human_size(p.size_bytes))),
             p.summary
         );
@@ -266,7 +268,7 @@ fn list(term: &Term) -> Result<(), ExitCode> {
     println!();
     println!("{}", term.bold("Applicazioni preinstallate con LibonOS"));
     for app in system::PREINSTALLED {
-        println!("  {} {}", term.cyan(app.id), term.dim(app.summary));
+        println!("  {} {}", term.accent_alt(app.id), term.dim(app.summary));
     }
     Ok(())
 }
@@ -284,14 +286,14 @@ fn info(term: &Term, args: &[String]) -> Result<(), ExitCode> {
     let results = manager.search(app);
     if let Some(p) = results.iter().find(|p| p.id == *app).or(results.first()) {
         println!("{}", term.bold(&p.name));
-        println!("  {} {}", term.violet("id"), p.id);
-        println!("  {} {}", term.violet("categoria"), p.category.label());
+        println!("  {} {}", term.accent("id"), p.id);
+        println!("  {} {}", term.accent("categoria"), p.category.label());
         println!(
             "  {} {}",
-            term.violet("dimensione"),
+            term.accent("dimensione"),
             version::human_size(p.size_bytes)
         );
-        println!("  {} {}", term.violet("gestore"), p.manager.label());
+        println!("  {} {}", term.accent("gestore"), p.manager.label());
         println!("  {}", p.summary);
         Ok(())
     } else {
@@ -306,7 +308,7 @@ fn update(term: &Term) -> Result<(), ExitCode> {
     let status = UpdateStatus::check(&current, &channel);
 
     println!("{} {}", term.bold("libon"), term.dim("· update"));
-    println!("  {} {}", term.violet("versione attuale"), current);
+    println!("  {} {}", term.accent("versione attuale"), current);
 
     match status.kind {
         UpdateKind::UpToDate => {
@@ -317,7 +319,7 @@ fn update(term: &Term) -> Result<(), ExitCode> {
             );
         }
         UpdateKind::InPlace => {
-            println!("  {} {}", term.violet("disponibile"), status.target);
+            println!("  {} {}", term.accent("disponibile"), status.target);
             println!(
                 "  {} {}",
                 term.dim("dimensione"),
@@ -353,7 +355,7 @@ fn update(term: &Term) -> Result<(), ExitCode> {
         println!();
         println!(
             "  {} {} → {}",
-            term.cyan("aggiornamento di sistema completo"),
+            term.accent_alt("aggiornamento di sistema completo"),
             current,
             major.target
         );
@@ -373,7 +375,7 @@ fn upgrade(term: &Term) -> Result<(), ExitCode> {
         Some(major) => {
             println!(
                 "  {} {} → {}",
-                term.cyan("aggiornamento completo disponibile"),
+                term.accent_alt("aggiornamento completo disponibile"),
                 current,
                 major.target
             );
@@ -410,27 +412,27 @@ fn status(term: &Term) -> Result<(), ExitCode> {
     let status = UpdateStatus::check(&current, &channel);
     let (name, release) = system::os_identity();
     println!("{}", term.bold(&format!("{name} {release}")));
-    println!("  {} {}", term.violet("canale"), channel.name);
+    println!("  {} {}", term.accent("canale"), channel.name);
     println!(
         "  {} {}",
-        term.violet("stato"),
+        term.accent("stato"),
         match status.kind {
             UpdateKind::UpToDate => term.green("aggiornato"),
             UpdateKind::InPlace =>
                 term.yellow(&format!("aggiornamento {} disponibile", status.target)),
-            UpdateKind::FullSystemUpgrade => term.cyan("aggiornamento completo disponibile"),
+            UpdateKind::FullSystemUpgrade => term.accent_alt("aggiornamento completo disponibile"),
             UpdateKind::Downgrade => term.dim("versione più recente del canale"),
         }
     );
     println!(
         "  {} {}",
-        term.violet("gestore pacchetti"),
+        term.accent("gestore pacchetti"),
         configured_manager().label()
     );
     if let Some(major) = UpdateStatus::check_major_upgrade(&current, &channel) {
         println!(
             "  {} {}",
-            term.violet("prossima major"),
+            term.accent("prossima major"),
             term.dim(&format!("{} (da Impostazioni)", major.target))
         );
     }
@@ -520,7 +522,7 @@ fn print_help(term: &Term) {
         ("help", "mostra questo aiuto"),
     ];
     for (c, d) in rows {
-        println!("  {}  {}", term.violet(&format!("{c:<18}")), d);
+        println!("  {}  {}", term.accent(&format!("{c:<18}")), d);
     }
     println!();
     println!(

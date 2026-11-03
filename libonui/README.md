@@ -79,7 +79,12 @@ xvfb-run -a -s "-screen 0 1440x900x24" cargo run -p libonui-app -- --shots artif
 
 ## Design
 
-A deep violet-black canvas with one violet-to-cyan accent pair. Colour carries
+A near-neutral graphite canvas with one amber-to-teal accent pair. Colour carries
 meaning — action, focus, status — never decoration. The tokens are data
 (`libonui-core::tokens`), so the shell, the installer, the terminal and the CLI
 all read the same values, and the contrast ratios are testable.
+
+The canvas is deliberately hue-free: every trace of warmth belongs to the
+accent, which keeps the interface from sliding into the violet-and-cyan look
+that generated UIs default to. A test guards both properties, so the palette
+cannot drift back without failing the build.
