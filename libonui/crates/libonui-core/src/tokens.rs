@@ -165,35 +165,37 @@ pub struct Tokens {
 }
 
 impl Tokens {
-    /// The default LibonOS look: dark, calm, violet. Chosen for the use scene —
-    /// a personal computer used late, in low ambient light — not from category
-    /// habit.
+    /// The default LibonOS look: a neutral graphite canvas lit by a single
+    /// amber-to-teal accent pair. Chosen for the use scene — a personal computer
+    /// used late, in low ambient light — and to stay clear of the violet-cyan
+    /// gradient that every generated interface reaches for by reflex. The
+    /// canvas carries no hue of its own; all warmth belongs to the accent.
     pub const fn dark() -> Self {
         Self {
-            canvas: Rgba::new(0x0D, 0x0B, 0x16),
-            surface: Rgba::new(0x16, 0x14, 0x22),
-            surface_raised: Rgba::new(0x1E, 0x1B, 0x2E),
-            surface_overlay: Rgba::new(0x26, 0x22, 0x39),
-            border: Rgba::new(0x33, 0x2E, 0x4A),
-            border_strong: Rgba::new(0x46, 0x3F, 0x63),
-            text: Rgba::new(0xF3, 0xF1, 0xFA),
-            text_secondary: Rgba::new(0xBD, 0xB7, 0xD6),
-            text_muted: Rgba::new(0x8B, 0x84, 0xA8),
+            canvas: Rgba::new(0x0E, 0x0E, 0x10),
+            surface: Rgba::new(0x16, 0x16, 0x18),
+            surface_raised: Rgba::new(0x1E, 0x1E, 0x21),
+            surface_overlay: Rgba::new(0x26, 0x26, 0x2A),
+            border: Rgba::new(0x33, 0x33, 0x38),
+            border_strong: Rgba::new(0x46, 0x46, 0x4D),
+            text: Rgba::new(0xF2, 0xF0, 0xEC),
+            text_secondary: Rgba::new(0xBE, 0xB9, 0xB0),
+            text_muted: Rgba::new(0x8C, 0x87, 0x7E),
             // Bright enough to carry dark ink, so a filled button keeps AA
             // contrast without a second colour for its label.
-            accent: Rgba::new(0xA7, 0x8B, 0xFA),
-            accent_hover: Rgba::new(0xB7, 0xA3, 0xFF),
-            accent_soft: Rgba::new(0x2A, 0x22, 0x4D),
-            on_accent: Rgba::new(0x0D, 0x0B, 0x16),
-            accent_alt: Rgba::new(0x5F, 0xD8, 0xEC),
-            focus_ring: Rgba::new(0xB7, 0xA3, 0xFF),
-            success: Rgba::new(0x4A, 0xD9, 0x9B),
-            warning: Rgba::new(0xF2, 0xB9, 0x4B),
-            danger: Rgba::new(0xF2, 0x6D, 0x6D),
-            info: Rgba::new(0x63, 0xB6, 0xF5),
-            selection: Rgba::new(0x8B, 0x5C, 0xF6).with_alpha(0x59),
-            wallpaper_top: Rgba::new(0x1A, 0x12, 0x33),
-            wallpaper_bottom: Rgba::new(0x08, 0x08, 0x12),
+            accent: Rgba::new(0xE0, 0xA3, 0x3C),
+            accent_hover: Rgba::new(0xF0, 0xB8, 0x55),
+            accent_soft: Rgba::new(0x2E, 0x24, 0x16),
+            on_accent: Rgba::new(0x17, 0x13, 0x0A),
+            accent_alt: Rgba::new(0x6F, 0xA8, 0xA0),
+            focus_ring: Rgba::new(0xF0, 0xB8, 0x55),
+            success: Rgba::new(0x4F, 0xD1, 0x9A),
+            warning: Rgba::new(0xE8, 0xB4, 0x43),
+            danger: Rgba::new(0xF0, 0x71, 0x5E),
+            info: Rgba::new(0x63, 0xA6, 0xE8),
+            selection: Rgba::new(0xE0, 0xA3, 0x3C).with_alpha(0x59),
+            wallpaper_top: Rgba::new(0x1A, 0x19, 0x17),
+            wallpaper_bottom: Rgba::new(0x0A, 0x0A, 0x0B),
             type_scale: TypeScale::desktop(),
             space: Spacing::grid(),
             radius: Radii::desktop(),
@@ -204,28 +206,28 @@ impl Tokens {
     /// remapping roles rather than inverting the dark palette mechanically.
     pub const fn light() -> Self {
         Self {
-            canvas: Rgba::new(0xF6, 0xF5, 0xFB),
+            canvas: Rgba::new(0xF5, 0xF3, 0xEF),
             surface: Rgba::new(0xFF, 0xFF, 0xFF),
             surface_raised: Rgba::new(0xFF, 0xFF, 0xFF),
-            surface_overlay: Rgba::new(0xF0, 0xEE, 0xF8),
-            border: Rgba::new(0xDD, 0xD8, 0xEC),
-            border_strong: Rgba::new(0xC3, 0xBB, 0xDB),
-            text: Rgba::new(0x1B, 0x17, 0x2B),
-            text_secondary: Rgba::new(0x4A, 0x43, 0x63),
-            text_muted: Rgba::new(0x65, 0x5E, 0x7E),
-            accent: Rgba::new(0x6D, 0x35, 0xE0),
-            accent_hover: Rgba::new(0x5B, 0x25, 0xC8),
-            accent_soft: Rgba::new(0xEC, 0xE3, 0xFF),
+            surface_overlay: Rgba::new(0xED, 0xEA, 0xE3),
+            border: Rgba::new(0xDC, 0xD7, 0xCC),
+            border_strong: Rgba::new(0xC0, 0xB8, 0xA8),
+            text: Rgba::new(0x1B, 0x19, 0x17),
+            text_secondary: Rgba::new(0x4A, 0x45, 0x3D),
+            text_muted: Rgba::new(0x65, 0x5E, 0x53),
+            accent: Rgba::new(0x8A, 0x5A, 0x12),
+            accent_hover: Rgba::new(0x6F, 0x48, 0x09),
+            accent_soft: Rgba::new(0xF5, 0xE8, 0xCE),
             on_accent: Rgba::new(0xFF, 0xFF, 0xFF),
-            accent_alt: Rgba::new(0x0E, 0x7C, 0x92),
-            focus_ring: Rgba::new(0x6D, 0x35, 0xE0),
-            success: Rgba::new(0x14, 0x7D, 0x52),
-            warning: Rgba::new(0x9A, 0x62, 0x00),
-            danger: Rgba::new(0xC0, 0x2E, 0x2E),
-            info: Rgba::new(0x14, 0x63, 0xA8),
-            selection: Rgba::new(0x6D, 0x35, 0xE0).with_alpha(0x40),
-            wallpaper_top: Rgba::new(0xE7, 0xE2, 0xFA),
-            wallpaper_bottom: Rgba::new(0xCF, 0xD4, 0xF5),
+            accent_alt: Rgba::new(0x22, 0x63, 0x5C),
+            focus_ring: Rgba::new(0x8A, 0x5A, 0x12),
+            success: Rgba::new(0x14, 0x70, 0x3F),
+            warning: Rgba::new(0x8A, 0x5A, 0x00),
+            danger: Rgba::new(0xB3, 0x32, 0x1F),
+            info: Rgba::new(0x1B, 0x5B, 0x96),
+            selection: Rgba::new(0x8A, 0x5A, 0x12).with_alpha(0x40),
+            wallpaper_top: Rgba::new(0xEB, 0xE6, 0xDB),
+            wallpaper_bottom: Rgba::new(0xD3, 0xD8, 0xD6),
             type_scale: TypeScale::desktop(),
             space: Spacing::grid(),
             radius: Radii::desktop(),
@@ -294,6 +296,24 @@ mod tests {
             assert!(tokens.on_accent.contrast(tokens.accent) >= 4.5);
             assert!(tokens.accent.contrast(tokens.canvas) >= 3.0);
         }
+    }
+
+    /// The palette must not drift back toward the violet-and-cyan default that
+    /// reads as machine-made. The canvas carries no hue, and the accent is warm.
+    #[test]
+    fn palette_stays_clear_of_the_generated_default() {
+        let d = Tokens::dark();
+        // The canvas is neutral: red, green and blue within one step of 16.
+        let c = d.canvas;
+        let spread = c.r.max(c.g).max(c.b) - c.r.min(c.g).min(c.b);
+        assert!(spread <= 0x10, "canvas is tinted (spread {spread:#x})");
+        // The accent is warm: red leads blue by a wide margin.
+        assert!(
+            d.accent.r as i16 - d.accent.b as i16 >= 0x60,
+            "accent is not warm (r {} b {})",
+            d.accent.r,
+            d.accent.b
+        );
     }
 
     #[test]
