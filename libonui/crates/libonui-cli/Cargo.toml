@@ -1,0 +1,16 @@
+[package]
+name = "libonui-cli"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+description = "libon — the LibonOS package and update manager CLI"
+
+[[bin]]
+name = "libon"
+path = "src/main.rs"
+
+[dependencies]
+libonui-core = { path = "../libonui-core" }
+serde_json.workspace = true

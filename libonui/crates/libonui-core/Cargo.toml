@@ -1,0 +1,19 @@
+[package]
+name = "libonui-core"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+description = "Session, account, package-manager and update policy for the LibonOS desktop shell"
+
+[dependencies]
+serde.workspace = true
+serde_json.workspace = true
+toml.workspace = true
+chrono.workspace = true
+rand.workspace = true
+sha2.workspace = true
+dirs.workspace = true
+
+[dev-dependencies]

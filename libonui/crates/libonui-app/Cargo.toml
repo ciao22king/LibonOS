@@ -1,0 +1,19 @@
+[package]
+name = "libonui-app"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+description = "LibonUI — the LibonOS desktop shell"
+
+[[bin]]
+name = "libonui"
+path = "src/main.rs"
+
+[dependencies]
+libonui-core = { path = "../libonui-core" }
+eframe = { version = "0.29", default-features = false, features = ["default_fonts", "glow", "wayland", "x11"] }
+egui = "0.29"
+image = { version = "0.25", default-features = false, features = ["png"] }
+chrono.workspace = true
