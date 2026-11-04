@@ -16,7 +16,7 @@ pub const TABLES: &[Table] = &[
     TABLE_FR,
     TABLE_RU,
     TABLE_ZH_HANS,
-]
+];
 
 /// English.
 pub const TABLE_EN: Table = Table {

@@ -234,6 +234,7 @@ mod tests {
         assert!(paths.is_first_run());
         let record = crate::onboarding::FirstRunRecord {
             completed: true,
+            locale: crate::i18n::Locale::En,
             package_manager: PackageManagerKind::Libon,
             telemetry_enabled: false,
             automatic_updates: true,
