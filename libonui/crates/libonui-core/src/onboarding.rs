@@ -5,6 +5,7 @@
 //! required answer, and so the same order is testable without a display.
 
 use crate::accounts::{validate_new_account, Account, AuthError};
+use crate::i18n::{Key, Locale, Strings};
 use crate::packages::PackageManagerKind;
 use serde::{Deserialize, Serialize};
 
@@ -13,6 +14,7 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "snake_case")]
 pub enum SetupStep {
     Welcome,
+    Language,
     Name,
     Password,
     PackageManager,
@@ -21,8 +23,9 @@ pub enum SetupStep {
 }
 
 impl SetupStep {
-    pub const ALL: [SetupStep; 6] = [
+    pub const ALL: [SetupStep; 7] = [
         SetupStep::Welcome,
+        SetupStep::Language,
         SetupStep::Name,
         SetupStep::Password,
         SetupStep::PackageManager,
@@ -57,14 +60,22 @@ impl SetupStep {
         self.index() as f32 / (Self::ALL.len() - 1) as f32
     }
 
-    pub fn title(self) -> &'static str {
+    /// The heading for this step, in the active language.
+    pub fn title(self, t: &Strings) -> &'static str {
+        t.get(self.title_key())
+    }
+
+    /// The key behind [`SetupStep::title`], for callers that need the key rather
+    /// than the text — a test, or a log line.
+    pub fn title_key(self) -> Key {
         match self {
-            SetupStep::Welcome => "Benvenuto in LibonOS",
-            SetupStep::Name => "Come ti chiami?",
-            SetupStep::Password => "Proteggi il tuo PC",
-            SetupStep::PackageManager => "Come installi i programmi?",
-            SetupStep::Privacy => "Telemetria e aggiornamenti",
-            SetupStep::Finish => "Tutto pronto",
+            SetupStep::Welcome => Key::WelcomeTitle,
+            SetupStep::Language => Key::LanguageTitle,
+            SetupStep::Name => Key::NameTitle,
+            SetupStep::Password => Key::PasswordTitle,
+            SetupStep::PackageManager => Key::ManagerTitle,
+            SetupStep::Privacy => Key::PrivacyTitle,
+            SetupStep::Finish => Key::FinishTitle,
         }
     }
 }
@@ -72,6 +83,9 @@ impl SetupStep {
 /// Answers gathered during setup, before the account is written to disk.
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
 pub struct SetupAnswers {
+    /// The interface language chosen on the first step. It becomes the system
+    /// locale once setup finishes.
+    pub locale: Locale,
     pub first_name: String,
     pub password: String,
     pub confirm: String,
@@ -84,6 +98,9 @@ pub struct SetupAnswers {
 impl Default for SetupAnswers {
     fn default() -> Self {
         Self {
+            // Opening setup in the language the machine already speaks is the
+            // one default that never has to be asked twice.
+            locale: Locale::from_env(),
             first_name: String::new(),
             password: String::new(),
             confirm: String::new(),
@@ -101,8 +118,10 @@ impl Default for SetupAnswers {
 pub struct SetupState {
     pub step: SetupStep,
     pub answers: SetupAnswers,
-    /// Set after a failed attempt to leave a step, so the UI can show why.
-    pub error: Option<String>,
+    /// Set after a failed attempt to leave a step, so the UI can show why. It
+    /// holds a [`Key`] rather than a sentence, so switching language in the
+    /// middle of setup re-renders the reason in the new language.
+    pub error: Option<Key>,
 }
 
 impl Default for SetupState {
@@ -121,11 +140,23 @@ impl SetupState {
     pub fn advance(&mut self) -> SetupStep {
         self.error = None;
         if let Err(err) = self.validate_current() {
-            self.error = Some(err.message());
+            self.error = Some(err.key());
             return self.step;
         }
         self.step = self.step.next();
         self.step
+    }
+
+    /// The string table for the language this setup is running in.
+    pub fn strings(&self) -> Strings {
+        Strings::new(self.answers.locale)
+    }
+
+    /// Switch the interface language, keeping every answer already given. A
+    /// validation message on screen re-renders in the new language, because the
+    /// error is stored as a key.
+    pub fn set_locale(&mut self, locale: Locale) {
+        self.answers.locale = locale;
     }
 
     pub fn back(&mut self) -> SetupStep {
@@ -198,6 +229,10 @@ impl SetupState {
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
 pub struct FirstRunRecord {
     pub completed: bool,
+    /// The language setup was finished in. The desktop reads it on boot, so the
+    /// choice survives a restart without a second setting to keep in sync.
+    #[serde(default)]
+    pub locale: Locale,
     pub package_manager: PackageManagerKind,
     pub telemetry_enabled: bool,
     pub automatic_updates: bool,
@@ -208,6 +243,7 @@ impl FirstRunRecord {
     pub fn from_answers(answers: &SetupAnswers) -> Self {
         Self {
             completed: true,
+            locale: answers.locale,
             package_manager: answers.package_manager,
             telemetry_enabled: answers.telemetry_enabled,
             automatic_updates: answers.automatic_updates,
@@ -255,6 +291,52 @@ mod tests {
         assert_eq!(s.step, SetupStep::Welcome);
         assert!(SetupStep::Welcome.progress() == 0.0);
         assert!(SetupStep::Finish.progress() == 1.0);
+    }
+
+    #[test]
+    fn language_comes_first_and_defaults_to_the_environment() {
+        assert_eq!(SetupStep::Welcome.next(), SetupStep::Language);
+        assert_eq!(SetupStep::Language.next(), SetupStep::Name);
+        assert_eq!(SetupStep::ALL.len(), 7);
+        let s = SetupState::default();
+        assert!(Locale::ALL.contains(&s.answers.locale));
+    }
+
+    #[test]
+    fn switching_language_keeps_the_answers_given_so_far() {
+        let mut s = SetupState::default();
+        s.answers.first_name = "Giulia".into();
+        s.set_locale(Locale::Ru);
+        assert_eq!(s.answers.first_name, "Giulia");
+        assert_eq!(s.strings().get(Key::NameTitle), "Как вас называть?");
+    }
+
+    #[test]
+    fn a_validation_error_survives_a_language_change() {
+        // The reason is stored as a key, so it re-renders rather than being a
+        // sentence frozen in the language it was raised in.
+        let mut s = SetupState {
+            step: SetupStep::Name,
+            ..SetupState::default()
+        };
+        s.set_locale(Locale::En);
+        s.advance();
+        assert_eq!(s.error, Some(Key::ErrorEmptyName));
+        s.set_locale(Locale::De);
+        let shown = s.strings().get(s.error.unwrap());
+        assert_eq!(shown, "Gib deinen Namen ein.");
+    }
+
+    #[test]
+    fn every_step_has_a_title_in_every_language() {
+        let mut s = SetupState::default();
+        for locale in Locale::ALL {
+            s.set_locale(locale);
+            let t = s.strings();
+            for step in SetupStep::ALL {
+                assert!(!step.title(&t).trim().is_empty(), "{locale:?} // {step:?}");
+            }
+        }
     }
 
     #[test]

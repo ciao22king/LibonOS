@@ -5,6 +5,7 @@
 //! digest; a login succeeds only when the recomputed digest matches in constant
 //! time.
 
+use crate::i18n::{Key, Locale, Strings};
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 
@@ -42,21 +43,39 @@ pub enum AuthError {
 }
 
 impl AuthError {
-    pub fn message(&self) -> String {
+    /// The message as a string key, so the UI renders it in the active language
+    /// instead of in whichever language this enum was written in.
+    ///
+    /// `PasswordTooShort` carries a length the sentence has to show, so the key
+    /// alone is not enough: [`AuthError::placeholder`] carries the value and
+    /// [`AuthError::message`] fills it back in.
+    pub fn key(&self) -> Key {
         match self {
-            AuthError::EmptyName => "Inserisci il tuo nome.".into(),
-            AuthError::NameTooLong => "Il nome è troppo lungo (massimo 32 caratteri).".into(),
-            AuthError::PasswordTooShort { min } => {
-                format!("La password deve avere almeno {min} caratteri.")
-            }
-            AuthError::PasswordNeedsVariety => {
-                "Usa almeno una lettera e un numero per una password più solida.".into()
-            }
-            AuthError::PasswordsDoNotMatch => "Le due password non coincidono.".into(),
-            AuthError::UnknownUser => {
-                "Nessun account su questo PC. Completa la configurazione.".into()
-            }
-            AuthError::WrongPassword => "Password errata. Riprova.".into(),
+            AuthError::EmptyName => Key::ErrorEmptyName,
+            AuthError::NameTooLong => Key::ErrorNameTooLong,
+            AuthError::PasswordTooShort { .. } => Key::ErrorPasswordTooShort,
+            AuthError::PasswordNeedsVariety => Key::ErrorPasswordNeedsVariety,
+            AuthError::PasswordsDoNotMatch => Key::ErrorPasswordsDoNotMatch,
+            AuthError::UnknownUser => Key::ErrorUnknownUser,
+            AuthError::WrongPassword => Key::ErrorWrongPassword,
+        }
+    }
+
+    /// The value the message's `{n}` placeholder takes, when it has one.
+    pub fn placeholder(&self) -> Option<String> {
+        match self {
+            AuthError::PasswordTooShort { min } => Some(min.to_string()),
+            _ => None,
+        }
+    }
+
+    /// The message in one locale. Kept for callers with no string table handy —
+    /// a test, a log line, or the CLI's error path.
+    pub fn message(&self, locale: Locale) -> String {
+        let t = Strings::new(locale);
+        match self.placeholder() {
+            Some(value) => t.get_with(self.key(), &value),
+            None => t.get(self.key()).to_string(),
         }
     }
 }
@@ -316,5 +335,39 @@ mod tests {
         let bytes = vec![0x00, 0x0f, 0xa5, 0xff];
         assert_eq!(from_hex(&to_hex(&bytes)).unwrap(), bytes);
         assert!(from_hex("abc").is_err());
+    }
+}
+
+#[cfg(test)]
+mod i18n_tests {
+    use super::*;
+
+    #[test]
+    fn every_error_maps_to_a_key_that_carries_its_own_message() {
+        for err in [
+            AuthError::EmptyName,
+            AuthError::NameTooLong,
+            AuthError::PasswordTooShort { min: 8 },
+            AuthError::PasswordNeedsVariety,
+            AuthError::PasswordsDoNotMatch,
+            AuthError::UnknownUser,
+            AuthError::WrongPassword,
+        ] {
+            let key = err.key();
+            for locale in Locale::ALL {
+                let text = err.message(locale);
+                assert!(!text.trim().is_empty(), "{locale:?} // {key:?}");
+                assert!(!text.contains("{n}"), "{locale:?} left a placeholder: {text}");
+            }
+        }
+    }
+
+    #[test]
+    fn the_short_password_message_shows_the_real_minimum() {
+        let err = AuthError::PasswordTooShort { min: 12 };
+        assert_eq!(err.placeholder().as_deref(), Some("12"));
+        assert!(err.message(Locale::En).contains("12"));
+        assert!(err.message(Locale::Ru).contains("12"));
+        assert!(err.message(Locale::ZhHans).contains("12"));
     }
 }

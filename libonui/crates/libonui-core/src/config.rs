@@ -1,5 +1,6 @@
 //! Persisted settings and the on-disk layout of the shell's state.
 
+use crate::i18n::Locale;
 use crate::packages::PackageManagerKind;
 use crate::tokens::ThemeChoice;
 use serde::{Deserialize, Serialize};
@@ -39,6 +40,8 @@ impl WallpaperStyle {
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
 #[serde(default)]
 pub struct DesktopConfig {
+    /// The interface language, chosen during setup and changeable from Settings.
+    pub locale: Locale,
     pub theme: ThemeChoice,
     pub wallpaper: WallpaperStyle,
     pub accent_cyan: bool,
@@ -57,6 +60,9 @@ pub struct DesktopConfig {
 impl Default for DesktopConfig {
     fn default() -> Self {
         Self {
+            // A machine that has never been through setup still opens in the
+            // language it was booted in.
+            locale: Locale::from_env(),
             theme: ThemeChoice::Dark,
             wallpaper: WallpaperStyle::Aurora,
             accent_cyan: false,

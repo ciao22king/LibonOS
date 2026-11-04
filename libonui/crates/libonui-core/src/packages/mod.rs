@@ -10,6 +10,7 @@ pub mod apt;
 pub mod libon;
 pub mod pacman;
 
+use crate::i18n::{Key, Strings};
 use serde::{Deserialize, Serialize};
 
 /// Which package manager the machine is configured to use.
@@ -36,14 +37,19 @@ impl PackageManagerKind {
         }
     }
 
-    pub fn description(self) -> &'static str {
+    /// The key behind the one-line description shown in setup and Settings.
+    pub fn description_key(self) -> Key {
         match self {
-            PackageManagerKind::Apt => "Il gestore di Debian e Ubuntu. Repository .deb collaudati.",
-            PackageManagerKind::Pacman => "Il gestore di Arch. Pacchetti binari veloci e rolling.",
-            PackageManagerKind::Libon => {
-                "Preinstallato con LibonOS. Cerca l'app, scarica l'AppImage e la esegue."
-            }
+            PackageManagerKind::Apt => Key::ManagerAptDescription,
+            PackageManagerKind::Pacman => Key::ManagerPacmanDescription,
+            PackageManagerKind::Libon => Key::ManagerLibonDescription,
         }
+    }
+
+    /// The description in the active language. The manager's *name* is not
+    /// translated: APT, pacman and libon are proper nouns.
+    pub fn description(self, t: &Strings) -> &'static str {
+        t.get(self.description_key())
     }
 
     /// The executable that must exist for this manager to be usable.
@@ -104,17 +110,23 @@ impl Category {
         Category::System,
     ];
 
-    pub fn label(self) -> &'static str {
+    /// The key behind [`Category::label`], for callers that need the key rather
+    /// than the text.
+    pub fn key(self) -> Key {
         match self {
-            Category::System => "Sistema",
-            Category::Internet => "Internet",
-            Category::Development => "Sviluppo",
-            Category::Media => "Multimedia",
-            Category::Office => "Ufficio",
-            Category::Games => "Giochi",
-            Category::Communication => "Comunicazione",
-            Category::Utilities => "Accessori",
+            Category::System => Key::CategorySystem,
+            Category::Internet => Key::CategoryInternet,
+            Category::Development => Key::CategoryDevelopment,
+            Category::Media => Key::CategoryMedia,
+            Category::Office => Key::CategoryOffice,
+            Category::Games => Key::CategoryGames,
+            Category::Communication => Key::CategoryCommunication,
+            Category::Utilities => Key::CategoryUtilities,
         }
+    }
+
+    pub fn label(self, t: &Strings) -> &'static str {
+        t.get(self.key())
     }
 }
 
@@ -249,12 +261,31 @@ mod tests {
     use super::*;
 
     #[test]
-    fn every_kind_has_a_manager_and_labels() {
+    fn every_kind_has_a_manager_and_a_name() {
         for kind in PackageManagerKind::ALL {
             assert!(!kind.label().is_empty());
-            assert!(!kind.description().is_empty());
             let m = kind.manager();
             assert_eq!(m.kind(), kind);
+        }
+    }
+
+    #[test]
+    fn every_manager_and_category_is_described_in_every_language() {
+        use crate::i18n::Locale;
+        for locale in Locale::ALL {
+            let t = Strings::new(locale);
+            for kind in PackageManagerKind::ALL {
+                assert!(
+                    !kind.description(&t).trim().is_empty(),
+                    "{locale:?} // {kind:?}"
+                );
+            }
+            for category in Category::ALL {
+                assert!(
+                    !category.label(&t).trim().is_empty(),
+                    "{locale:?} // {category:?}"
+                );
+            }
         }
     }
 

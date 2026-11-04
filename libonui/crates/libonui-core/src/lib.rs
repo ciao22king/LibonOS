@@ -1,8 +1,8 @@
 //! **libonui-core** — the headless heart of the LibonOS desktop shell.
 //!
 //! Everything that can be decided without a screen lives here: the design
-//! tokens, the account and first-run flow, the package-manager abstraction, the
-//! OS update policy, and the window manager. The `libonui-app` crate draws it,
+//! tokens, the interface languages, the account and first-run flow, the
+//! package-manager abstraction, the OS update policy, and the window manager. The `libonui-app` crate draws it,
 //! and `libon` (the CLI) drives the same package and update logic from the
 //! terminal.
 //!
@@ -13,6 +13,7 @@
 pub mod accounts;
 pub mod channels;
 pub mod config;
+pub mod i18n;
 pub mod onboarding;
 pub mod packages;
 pub mod system;
@@ -22,6 +23,7 @@ pub mod wm;
 
 pub use accounts::{Account, AuthError};
 pub use config::{DesktopConfig, StatePaths, WallpaperStyle};
+pub use i18n::{Key, Locale, Strings};
 pub use onboarding::{SetupAnswers, SetupState, SetupStep};
 pub use packages::{manager_for, Package, PackageManager, PackageManagerKind};
 pub use system::{os_identity, os_version, PREINSTALLED};
